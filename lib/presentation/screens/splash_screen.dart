@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:task_manager_app/presentation/screens/sign_in_screen.dart';
-import 'package:task_manager_app/presentation/utils/assets_path.dart';
+import 'package:task_manager_app/presentation/widgets/app_logo.dart';
 import 'package:task_manager_app/presentation/widgets/background_widget.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -28,14 +27,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       body: BackgroundWidget(
         child: Center(
-          child: SvgPicture.asset(
-            'assets/images/logo.svg',
-            width: 100,
-            fit: BoxFit.scaleDown,
-          ),
+          child: AppLogo(),
         ),
       )
     );
