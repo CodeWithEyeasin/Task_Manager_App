@@ -19,6 +19,7 @@ class _TaskManagerState extends State<TaskManager> {
       title: 'Task Manager',
       home: const SplashScreen(),
       theme: ThemeData(
+        fontFamily: 'Roboto',
           inputDecorationTheme: InputDecorationTheme(
             fillColor: Colors.white,
             filled: true,
