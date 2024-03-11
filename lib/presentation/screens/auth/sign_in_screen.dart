@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_app/presentation/data/models/response_object.dart';
+import 'package:task_manager_app/presentation/data/services/network_caller.dart';
 import 'package:task_manager_app/presentation/screens/auth/sign_up_screen.dart';
 import 'package:task_manager_app/presentation/screens/main_bottom_nav_screen.dart';
 import 'package:task_manager_app/presentation/widgets/background_widget.dart';
+import 'package:task_manager_app/presentation/widgets/snak_bar_message.dart';
 
+import '../../data/utility/urls.dart';
 import 'email_verification_screen.dart';
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -16,6 +20,8 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _emailTEController = TextEditingController();
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+
+  bool _isLoginInProgress = false;
 
   @override
   Widget build(BuildContext context) {
@@ -38,6 +44,12 @@ class _SignInScreenState extends State<SignInScreen> {
                     decoration: const InputDecoration(
                       hintText: 'Email',
                     ),
+                    validator: (String? value){
+                      if(value?.trim().isEmpty?? true){
+                        return 'Enter Your Email';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 8,),
                   TextFormField(
@@ -47,20 +59,29 @@ class _SignInScreenState extends State<SignInScreen> {
                     decoration: const InputDecoration(
                         hintText: 'Password',
                     ),
+                    validator: (String? value){
+                      if(value?.trim().isEmpty?? true){
+                        return 'Enter Your Password';
+                      }
+                      return null;
+                    },
                   ),
                   const SizedBox(height: 16,),
                   SizedBox(
                     width: double.infinity,
-                      child: ElevatedButton(
-                          onPressed: () {
-                        Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) =>
-                                    const MainBottomNavScreen()),
-                            (route) => false);
-                      },
-                          child: const Icon(Icons.arrow_circle_right_outlined),),),
+                      child: Visibility(
+                        visible: _isLoginInProgress==false,
+                        replacement:const Center(
+                          child: CircularProgressIndicator(),
+                        ) ,
+                        child: ElevatedButton(
+                            onPressed: () {
+                              if(_formKey.currentState!.validate()){
+                                _signIn();
+                              }
+                        },
+                            child: const Icon(Icons.arrow_circle_right_outlined),),
+                      ),),
                   const SizedBox(height: 60,),
                   Center(
                     child: TextButton(
@@ -108,6 +129,38 @@ class _SignInScreenState extends State<SignInScreen> {
     );
 
   }
+
+  Future<void> _signIn() async{
+_isLoginInProgress=true;
+setState(() {});
+Map<String, dynamic> inputParams ={
+  "email":_emailTEController.text.trim(),
+  "password":_passwordTEController.text,
+};
+final ResponseObject response =
+        await NetWorkCaller.postRequest(Urls.login, inputParams);
+_isLoginInProgress=false;
+setState(() {});
+if(response.isSuccess){
+  if(mounted){
+    Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+            const MainBottomNavScreen()),
+            (route) => false);
+  }
+}
+else{
+if(!mounted){
+  return;
+}
+showSnackBarMessage(
+          context, response.errorMessage ?? 'Login Failed! Try Again');
+    }
+  }
+
+
   @override
   void dispose() {
     _emailTEController.dispose();

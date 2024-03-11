@@ -45,11 +45,17 @@ class NetWorkCaller {
         final decodedResponse = jsonDecode(response.body);
         return ResponseObject(
             isSuccess: true, statusCode: 200, responseBody: decodedResponse);
-      } else {
+      }else if(response.statusCode==401){
         return ResponseObject(
             isSuccess: false,
             statusCode: response.statusCode,
             responseBody: '');
+      } else {
+        return ResponseObject(
+            isSuccess: false,
+            statusCode: response.statusCode,
+            responseBody: '',
+        errorMessage: 'Email/Password is incorrect! TryAgain');
       }
     } catch (e) {
       log(e.toString());
