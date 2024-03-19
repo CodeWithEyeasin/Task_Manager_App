@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:task_manager_app/presentation/controllers/auth_controller.dart';
+import 'package:task_manager_app/presentation/data/models/login_response.dart';
 import 'package:task_manager_app/presentation/data/models/response_object.dart';
 import 'package:task_manager_app/presentation/data/services/network_caller.dart';
 import 'package:task_manager_app/presentation/screens/auth/sign_up_screen.dart';
@@ -142,7 +144,16 @@ final ResponseObject response =
 _isLoginInProgress=false;
 setState(() {});
 if(response.isSuccess){
-  if(mounted){
+  if(!mounted){
+    return;
+  }
+
+LoginResponse loginResponse=LoginResponse.fromJson(response.responseBody);
+  ///save the data to local cache
+  await AuthController.saveUserData(loginResponse.userData!);
+  await AuthController.saveUserToken(loginResponse.token!);
+
+  if(mounted) {
     Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
@@ -152,11 +163,10 @@ if(response.isSuccess){
   }
 }
 else{
-if(!mounted){
-  return;
+if(mounted){
+  showSnackBarMessage(
+      context, response.errorMessage ?? 'Login Failed! Try Again');
 }
-showSnackBarMessage(
-          context, response.errorMessage ?? 'Login Failed! Try Again');
     }
   }
 
