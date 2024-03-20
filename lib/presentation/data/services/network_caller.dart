@@ -1,8 +1,11 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart';
+import 'package:task_manager_app/app.dart';
 import 'package:task_manager_app/presentation/controllers/auth_controller.dart';
 import 'package:task_manager_app/presentation/data/models/response_object.dart';
+import 'package:flutter/material.dart';
+import 'package:task_manager_app/presentation/screens/auth/sign_in_screen.dart';
 
 class NetWorkCaller {
   static Future<ResponseObject> getRequest(String url) async {
@@ -18,7 +21,14 @@ class NetWorkCaller {
         final decodedResponse = jsonDecode(response.body);
         return ResponseObject(
             isSuccess: true, statusCode: 200, responseBody: decodedResponse);
-      } else {
+      }else if(response.statusCode==401){
+        _moveToSignIn();
+        return ResponseObject(
+            isSuccess: false,
+            statusCode: response.statusCode,
+            responseBody: '');
+      }
+      else {
         return ResponseObject(
             isSuccess: false,
             statusCode: response.statusCode,
@@ -35,7 +45,7 @@ class NetWorkCaller {
   }
 
   static Future<ResponseObject> postRequest(
-      String url, Map<String, dynamic> body) async {
+      String url, Map<String, dynamic> body,{bool fromSignIn = false} ) async {
     try {
       final Response response = await post(Uri.parse(url),
           body: jsonEncode(body),
@@ -52,11 +62,22 @@ class NetWorkCaller {
         return ResponseObject(
             isSuccess: true, statusCode: 200, responseBody: decodedResponse);
       }else if(response.statusCode==401){
-        return ResponseObject(
-            isSuccess: false,
-            statusCode: response.statusCode,
-            responseBody: '');
-      } else {
+        if(fromSignIn){
+          return ResponseObject(
+              isSuccess: false,
+              statusCode: response.statusCode,
+              responseBody: '');
+        }else{
+
+          _moveToSignIn();
+          return ResponseObject(
+              isSuccess: false,
+              statusCode: response.statusCode,
+              responseBody: '');
+        }
+
+      }
+      else {
         return ResponseObject(
             isSuccess: false,
             statusCode: response.statusCode,
@@ -71,5 +92,12 @@ class NetWorkCaller {
           responseBody: '',
           errorMessage: e.toString());
     }
+  }
+
+ static Future<void> _moveToSignIn() async {
+await AuthController.clearUserData();
+Navigator.pushAndRemoveUntil(TaskManager.navigatorKey.currentState!.context,
+    MaterialPageRoute(builder: (context) => const SignInScreen()), (
+        route) => false);
   }
 }
