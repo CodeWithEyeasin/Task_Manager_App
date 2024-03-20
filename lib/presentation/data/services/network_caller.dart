@@ -1,12 +1,15 @@
 import 'dart:convert';
 import 'dart:developer';
 import 'package:http/http.dart';
+import 'package:task_manager_app/presentation/controllers/auth_controller.dart';
 import 'package:task_manager_app/presentation/data/models/response_object.dart';
 
 class NetWorkCaller {
   static Future<ResponseObject> getRequest(String url) async {
     try {
-      final Response response = await get(Uri.parse(url),);
+      final Response response = await get(Uri.parse(url),headers:{
+        'token': AuthController.accessToken ?? ''
+      } );
 
       log(response.statusCode.toString());
       log(response.body.toString());
@@ -36,7 +39,10 @@ class NetWorkCaller {
     try {
       final Response response = await post(Uri.parse(url),
           body: jsonEncode(body),
-          headers: {'Content-type': 'application/json'});
+          headers: {
+            'Content-type': 'application/json',
+            'token': AuthController.accessToken ?? ''
+          });
 
       log(response.statusCode.toString());
       log(response.body.toString());
