@@ -1,14 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:task_manager_app/presentation/controllers/auth_controller.dart';
-import 'package:task_manager_app/presentation/data/models/login_response.dart';
-import 'package:task_manager_app/presentation/data/models/response_object.dart';
-import 'package:task_manager_app/presentation/data/services/network_caller.dart';
+import 'package:get/get_state_manager/src/simple/get_state.dart';
+import 'package:get/instance_manager.dart';
+import 'package:task_manager_app/presentation/controllers/sign_in_controller.dart';
 import 'package:task_manager_app/presentation/screens/auth/sign_up_screen.dart';
 import 'package:task_manager_app/presentation/screens/main_bottom_nav_screen.dart';
 import 'package:task_manager_app/presentation/widgets/background_widget.dart';
 import 'package:task_manager_app/presentation/widgets/snak_bar_message.dart';
-
-import '../../data/utility/urls.dart';
 import 'email_verification_screen.dart';
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -23,7 +20,7 @@ class _SignInScreenState extends State<SignInScreen> {
   final TextEditingController _passwordTEController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
-  bool _isLoginInProgress = false;
+  final SignInController _signInController=Get.find<SignInController>();
 
   @override
   Widget build(BuildContext context) {
@@ -71,18 +68,22 @@ class _SignInScreenState extends State<SignInScreen> {
                   const SizedBox(height: 16,),
                   SizedBox(
                     width: double.infinity,
-                      child: Visibility(
-                        visible: _isLoginInProgress==false,
-                        replacement:const Center(
-                          child: CircularProgressIndicator(),
-                        ) ,
-                        child: ElevatedButton(
-                            onPressed: () {
-                              if(_formKey.currentState!.validate()){
-                                _signIn();
-                              }
-                        },
-                            child: const Icon(Icons.arrow_circle_right_outlined),),
+                      child: GetBuilder<SignInController>(
+                        builder: (signInController) {
+                          return Visibility(
+                            visible: signInController.inProgress==false,
+                            replacement:const Center(
+                              child: CircularProgressIndicator(),
+                            ) ,
+                            child: ElevatedButton(
+                                onPressed: () {
+                                  if(_formKey.currentState!.validate()){
+                                    _signIn();
+                                  }
+                            },
+                                child: const Icon(Icons.arrow_circle_right_outlined),),
+                          );
+                        }
                       ),),
                   const SizedBox(height: 60,),
                   Center(
@@ -133,26 +134,10 @@ class _SignInScreenState extends State<SignInScreen> {
   }
 
   Future<void> _signIn() async{
-_isLoginInProgress=true;
-setState(() {});
-Map<String, dynamic> inputParams ={
-  "email":_emailTEController.text.trim(),
-  "password":_passwordTEController.text,
-};
-final ResponseObject response =
-        await NetWorkCaller.postRequest(Urls.login, inputParams, fromSignIn: true);
-_isLoginInProgress=false;
-setState(() {});
-if(response.isSuccess){
-  if(!mounted){
-    return;
-  }
+    final result = await _signInController
+        .signIn(_emailTEController.text.trim(), _passwordTEController.text);
 
-LoginResponse loginResponse=LoginResponse.fromJson(response.responseBody);
-  ///save the data to local cache
-  await AuthController.saveUserData(loginResponse.userData!);
-  await AuthController.saveUserToken(loginResponse.token!);
-
+    if(result){
   if(mounted) {
     Navigator.pushAndRemoveUntil(
         context,
@@ -165,7 +150,7 @@ LoginResponse loginResponse=LoginResponse.fromJson(response.responseBody);
 else{
 if(mounted){
   showSnackBarMessage(
-      context, response.errorMessage ?? 'Login Failed! Try Again');
+      context, _signInController.errorMessage);
 }
     }
   }

@@ -105,7 +105,7 @@ class _NewTaskScreenState extends State<NewTaskScreen> {
   }
  Widget get taskCounterSection{
     return  SizedBox(
-      height: 110,
+      height: 115,
       child: Padding(
         padding: const EdgeInsets.all(8.0),
         child: ListView.separated(
